@@ -2,6 +2,22 @@
 #include <cassert>
 
 
+
+int Strix::compare(const Strix& other) const noexcept {
+    size_t minLen = (size_ < other.size_) ? size_ : other.size_;
+
+    for (size_t i = 0; i < minLen; ++i) {
+        if (data_[i] < other.data_[i]) return -1;
+        if (data_[i] > other.data_[i]) return 1;
+    }
+
+    if (size_ < other.size_) return -1;
+    if (size_ > other.size_) return 1;
+    return 0; 
+}
+
+
+
 void Strix::copyFrom(const Strix& other) {
     size_ = other.size_;
     data_ = new char[size_ + 1];
@@ -126,6 +142,31 @@ Strix Strix::operator+(const Strix& other) const {
     return result;
 }
 
+Strix& Strix::operator+=(const Strix& other) {
+    size_t newSize = size_ + other.size_;
+    char* newData = new char[newSize + 1];
+
+    // Copy existing data
+    for (size_t i = 0; i < size_; ++i) {
+        newData[i] = data_[i];
+    }
+
+    // Copy other string
+    for (size_t i = 0; i < other.size_; ++i) {
+        newData[size_ + i] = other.data_[i];
+    }
+
+    newData[newSize] = '\0';
+
+    delete[] data_;
+    data_ = newData;
+    size_ = newSize;
+
+    return *this;
+}
+
+
+
 char& Strix::operator[](size_t index) {   //non-const version
     assert(index < size_ && "Index out of range");
     return data_[index];
@@ -154,4 +195,111 @@ Strix Strix::substr(size_t start, size_t length) const {
     result.data_[actualLength] = '\0';
 
     return result;
+}
+
+
+
+bool Strix::operator<(const Strix& other) const noexcept {
+    return compare(other) < 0;
+}
+
+bool Strix::operator>(const Strix& other) const noexcept {
+    return compare(other) > 0;
+}
+
+bool Strix::operator<=(const Strix& other) const noexcept {
+    return compare(other) <= 0;
+}
+
+bool Strix::operator>=(const Strix& other) const noexcept {
+    return compare(other) >= 0;
+}
+
+
+
+//insert method : "Hello" -> insert(2,"XX")  -> "HeXXllo"
+Strix& Strix::insert(size_t pos, const Strix& str) {
+    if (pos > size_) pos = size_;
+
+    size_t newSize = size_ + str.size_;
+    char* newData = new char[newSize + 1];
+
+    for (size_t i = 0; i < pos; ++i) {
+        newData[i] = data_[i];
+    }
+
+    for (size_t i = 0; i < str.size_; ++i) {
+        newData[pos + i] = str.data_[i];
+    }
+
+    for (size_t i = pos; i < size_; ++i) {
+        newData[str.size_ + i] = data_[i];
+    }
+
+    newData[newSize] = '\0';
+
+    delete[] data_;
+    data_ = newData;
+    size_ = newSize;
+
+    return *this;
+}
+
+
+//erase method : "Hello" -> erase(2,3) -> "He"
+Strix& Strix::erase(size_t pos, size_t len) {
+    if (pos >= size_) return *this;  //nothing to erase
+
+    size_t endPos = (pos + len > size_) ? size_ : pos + len;
+    size_t newSize = size_ - (endPos - pos);
+    char* newData = new char[newSize + 1];
+
+    for (size_t i = 0; i < pos; ++i) {
+        newData[i] = data_[i];
+    }
+
+    for (size_t i = endPos; i < size_; ++i) {
+        newData[i - (endPos - pos)] = data_[i];
+    }
+
+    newData[newSize] = '\0';
+
+    delete[] data_;
+    data_ = newData;
+    size_ = newSize;
+
+    return *this;
+}
+
+
+
+Strix& Strix::replace(size_t pos, size_t len, const Strix& str) {
+    erase(pos, len);
+    insert(pos, str);
+    return *this;
+}
+
+
+Strix::iterator Strix::begin() noexcept {
+    return data_;
+}
+
+Strix::iterator Strix::end() noexcept {
+    return data_ + size_;
+}
+
+Strix::const_iterator Strix::begin() const noexcept {
+    return data_;
+}
+
+Strix::const_iterator Strix::end() const noexcept {
+    return data_ + size_;
+}
+
+Strix::const_iterator Strix::cbegin() const noexcept {
+    return data_;
+}
+
+Strix::const_iterator Strix::cend() const noexcept {
+    return data_ + size_;
 }
